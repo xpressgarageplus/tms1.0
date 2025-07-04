@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Driver Live ETA</title>
+</head>
+<body>
+  <h2>Driver ETA to Destination (Auto-Refresh)</h2>
+
+  <form id="etaForm">
+    <label>Driver ID: <input type="number" id="driverId" required /></label><br />
+    <label>Destination: <input type="text" id="destination" required /></label><br />
+    <button type="submit">Start Tracking</button>
+    <button type="button" id="stopBtn">Stop</button>
+  </form>
+
+  <h3>Live Result:</h3>
+  <pre id="result"></pre>
+
+  <script>
+    let intervalId = null;
+
+    document.getElementById('etaForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const driverId = document.getElementById('driverId').value;
+      const destination = document.getElementById('destination').value;
+
+      if (intervalId) clearInterval(intervalId);
+
+      const fetchETA = async () => {
+        const res = await fetch(`/api/maps/live-eta?driverId=${driverId}&destination=${encodeURIComponent(destination)}`);
+        const data = await res.json();
+        document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+      };
+
+      fetchETA(); // Initial fetch
+      intervalId = setInterval(fetchETA, 10000); // Refresh every 10s
+    });
+
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+        document.getElementById('result').innerText = 'Tracking stopped.';
+      }
+    });
+  </script>
+</body>
+</html>

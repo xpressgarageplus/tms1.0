@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Driver Route to Destination</title>
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    body {
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <h2>Driver Route to Destination</h2>
+  <label>
+    Destination:
+    <input type="text" id="destination" value="Chicago, IL" />
+    <button onclick="updateRoute()">Show Route</button>
+  </label>
+
+  <div id="map"></div>
+  <pre id="status">Initializing...</pre>
+
+  <script>
+    const token = 'AIzaSyB-hKryP8a60mRgf2WO_pf-oBPJREAqP2Y'; // Replace this with a real JWT token
+    let map, marker, directionsService, directionsRenderer;
+    let currentLat, currentLng;
+
+    async function getCurrentLocation() {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true
+        });
+      });
+    }
+
+    async function initMap() {
+      const pos = await getCurrentLocation();
+      currentLat = pos.coords.latitude;
+      currentLng = pos.coords.longitude;
+
+      const currentPosition = { lat: currentLat, lng: currentLng };
+
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 7,
+        center: currentPosition
+      });
+
+      marker = new google.maps.Marker({
+        position: currentPosition,
+        map,
+        title: 'Current Location'
+      });
+
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer();
+      directionsRenderer.setMap(map);
+
+      // Optionally update backend
+      await fetch('/api/driver/location', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ latitude: currentLat, longitude: currentLng })
+      });
+
+      document.getElementById('status').innerText = `Location loaded at ${new Date().toLocaleTimeString()}`;
+    }
+
+    async function updateRoute() {
+      const destination = document.getElementById('destination').value;
+
+      if (!currentLat || !currentLng || !destination) {
+        return alert('Missing current location or destination');
+      }
+
+      const origin = `${currentLat},${currentLng}`;
+
+      directionsService.route(
+        {
+          origin,
+          destination,
+          travelMode: google.maps.TravelMode.DRIVING
+        },
+        (result, status) => {
+          if (status === 'OK') {
+            directionsRenderer.setDirections(result);
+            document.getElementById('status').innerText = `Route updated at ${new Date().toLocaleTimeString()}`;
+          } else {
+            document.getElementById('status').innerText = `Error: ${status}`;
+          }
+        }
+      );
+    }
+
+    initMap();
+  </script>
+
+  <!-- Replace with your actual Google Maps JavaScript API key -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB-hKryP8a60mRgf2WO_pf-oBPJREAqP2Y"></script>
+</body>
+</html>

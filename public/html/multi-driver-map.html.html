@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fleet Tracker - Multiple Drivers</title>
+  <style>
+    #map {
+      height: 600px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h2>Fleet Location and Routes</h2>
+  <div id="map"></div>
+
+  <script>
+    const token = 'YOUR_DISPATCHER_JWT_TOKEN_HERE'; // Replace with real token
+
+    let map;
+    const driverMarkers = [];
+    const directionsRenderers = [];
+
+    async function fetchDrivers() {
+      const res = await fetch('/api/drivers/locations', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return res.json();
+    }
+
+    async function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 5,
+        center: { lat: 39.5, lng: -98.35 } // Center of USA
+      });
+
+      const drivers = await fetchDrivers();
+
+      for (const driver of drivers) {
+        const { name, lastKnownLat, lastKnownLng, destination } = driver;
+
+        if (!lastKnownLat || !lastKnownLng) continue;
+
+        const position = { lat: parseFloat(lastKnownLat), lng: parseFloat(lastKnownLng) };
+
+        // Add marker
+        const marker = new google.maps.Marker({
+          position,
+          map,
+          title: name,
+          label: name[0].toUpperCase()
+        });
+        driverMarkers.push(marker);
+
+        // Draw route if destination is provided
+        if (destination) {
+          const directionsService = new google.maps.DirectionsService();
+          const directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: true });
+          directionsRenderer.setMap(map);
+          directionsRenderers.push(directionsRenderer);
+
+          directionsService.route(
+            {
+              origin: position,
+              destination,
+              travelMode: google.maps.TravelMode.DRIVING
+            },
+            (result, status) => {
+              if (status === 'OK') {
+                directionsRenderer.setDirections(result);
+              } else {
+                console.error(`Failed to get directions for ${name}:`, status);
+              }
+            }
+          );
+        }
+      }
+    }
+
+    initMap();
+  </script>
+
+  <!-- Replace with your actual Google Maps API Key -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY"></script>
+</body>
+</html>

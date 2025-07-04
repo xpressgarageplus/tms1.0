@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>All Drivers</title>
+</head>
+<body>
+  <h2>Driver List (Active + Terminated)</h2>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Termination Date</th>
+      </tr>
+    </thead>
+    <tbody id="driversTable"></tbody>
+  </table>
+
+  <script>
+    const yourToken = 'YOUR_JWT_TOKEN_HERE'; // Replace with the actual token (from login or localStorage)
+
+    async function loadDrivers() {
+      const res = await fetch('/api/drivers?all=true', {
+        headers: {
+          Authorization: `Bearer ${yourToken}`
+        }
+      });
+      const drivers = await res.json();
+
+      const tbody = document.getElementById('driversTable');
+      tbody.innerHTML = '';
+
+      drivers.forEach(driver => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${driver.name}</td>
+          <td>${driver.phone}</td>
+          <td>${driver.email}</td>
+          <td style="color: ${driver.isActive ? 'green' : 'red'}">
+            ${driver.isActive ? 'Active' : 'Terminated'}
+          </td>
+          <td>${driver.terminationDate ? new Date(driver.terminationDate).toLocaleDateString() : '-'}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    loadDrivers();
+  </script>
+</body>
+</html>

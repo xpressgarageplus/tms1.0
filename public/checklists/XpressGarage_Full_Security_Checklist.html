@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🔐 XPRESS GARAGE - Full Security & Launch Checklist</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #2c3e50; }
+    h2 { color: #34495e; margin-top: 2rem; }
+    ul { list-style: none; padding-left: 0; }
+    li { margin: 0.5rem 0; }
+    label { cursor: pointer; }
+    input[type="checkbox"] { margin-right: 0.5rem; }
+    .complete { text-decoration: line-through; color: green; }
+    button {
+      margin-top: 2rem;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 XPRESS GARAGE - Full Security & Launch Checklist</h1>
+
+  <h2>File Upload Security</h2>
+  <ul id="upload-security">
+    <li><label><input type="checkbox" data-id="upload-secure-folder"> Uploads are stored in a secure, non-public /uploads folder</label></li>
+    <li><label><input type="checkbox" data-id="upload-auth-endpoints"> All access to files is restricted via authenticated API endpoints</label></li>
+    <li><label><input type="checkbox" data-id="upload-authorized-users"> Only authorized users can preview or download files</label></li>
+    <li><label><input type="checkbox" data-id="upload-mime-types"> Only allowed MIME types are accepted (e.g., PDF, JPG, PNG)</label></li>
+    <li><label><input type="checkbox" data-id="upload-size-limit"> Maximum upload file size is enforced (e.g., 10MB)</label></li>
+    <li><label><input type="checkbox" data-id="upload-sanitization"> File name/path is sanitized to prevent path traversal attacks</label></li>
+    <li><label><input type="checkbox" data-id="upload-virus-scan"> Uploaded files are scanned for malware/viruses (if applicable)</label></li>
+    <li><label><input type="checkbox" data-id="upload-audit-log"> Audit logs track who uploads, downloads, or deletes files</label></li>
+    <li><label><input type="checkbox" data-id="upload-rate-limit"> Rate limiting is enabled to prevent upload abuse</label></li>
+  </ul>
+
+  <h2>Authentication & Token Security</h2>
+  <ul id="auth-security">
+    <li><label><input type="checkbox" data-id="token-signing"> Access tokens and refresh tokens are signed with strong secrets</label></li>
+    <li><label><input type="checkbox" data-id="token-expiration"> Tokens have appropriate expiration (e.g., 15m access, 7d refresh)</label></li>
+    <li><label><input type="checkbox" data-id="token-validation"> Sensitive routes require valid token validation middleware</label></li>
+    <li><label><input type="checkbox" data-id="token-rotation"> Refresh token rotation or revocation is implemented</label></li>
+    <li><label><input type="checkbox" data-id="password-hashing"> User passwords are hashed with bcrypt or Argon2</label></li>
+    <li><label><input type="checkbox" data-id="login-rate-limit"> Failed logins are rate-limited and logged</label></li>
+    <li><label><input type="checkbox" data-id="jwt-secrets-env"> JWT secrets are stored securely in .env and not exposed</label></li>
+  </ul>
+
+  <h2>Database & API Hardening</h2>
+  <ul id="db-security">
+    <li><label><input type="checkbox" data-id="db-env-creds"> Database credentials are stored in environment variables</label></li>
+    <li><label><input type="checkbox" data-id="input-validation"> All inputs are validated and sanitized to prevent SQL injection</label></li>
+    <li><label><input type="checkbox" data-id="orm-use"> ORM or query builder is used to avoid raw SQL</label></li>
+    <li><label><input type="checkbox" data-id="api-rate-limit"> Rate limiting is applied to public-facing APIs</label></li>
+    <li><label><input type="checkbox" data-id="api-role-protect"> API routes are protected by auth and role middleware</label></li>
+    <li><label><input type="checkbox" data-id="db-backups"> Database backups are performed regularly and tested</label></li>
+    <li><label><input type="checkbox" data-id="no-public-db"> Production database is not publicly accessible</label></li>
+  </ul>
+
+  <h2>Cloud Backup & Storage Security</h2>
+  <ul id="cloud-security">
+    <li><label><input type="checkbox" data-id="backup-encrypted"> Backups are encrypted and stored securely</label></li>
+    <li><label><input type="checkbox" data-id="cloud-iam"> Access to cloud storage is restricted by IAM policies</label></li>
+    <li><label><input type="checkbox" data-id="cloud-audit"> Audit logs track access to backup and storage locations</label></li>
+    <li><label><input type="checkbox" data-id="cloud-scan"> Files in cloud are scanned for viruses/malware when uploaded</label></li>
+    <li><label><input type="checkbox" data-id="cloud-versioning"> Versioning is enabled on cloud buckets (if supported)</label></li>
+    <li><label><input type="checkbox" data-id="backup-expiry"> Expired backups are cleaned up to reduce exposure</label></li>
+    <li><label><input type="checkbox" data-id="dr-plan"> Disaster recovery plan exists and is documented</label></li>
+  </ul>
+
+  <button onclick="downloadAsPDF()">📄 Export as PDF</button>
+
+  <div class="footer">Generated on: 2025-07-04</div>
+
+  <script>
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+    checkboxes.forEach(checkbox => {
+      const key = checkbox.dataset.id;
+      const saved = localStorage.getItem(key);
+      if (saved === "true") {
+        checkbox.checked = true;
+        checkbox.parentElement.classList.add("complete");
+      }
+
+      checkbox.addEventListener("change", () => {
+        localStorage.setItem(key, checkbox.checked);
+        checkbox.parentElement.classList.toggle("complete", checkbox.checked);
+      });
+    });
+
+    function downloadAsPDF() {
+      window.print(); // Use browser's built-in print to PDF
+    }
+  </script>
+</body>
+</html>

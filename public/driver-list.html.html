@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Driver List</title>
+</head>
+<body>
+  <h2>All Drivers</h2>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Termination Date</th>
+      </tr>
+    </thead>
+    <tbody id="driversTable"></tbody>
+  </table>
+
+  <script>
+    const yourToken = 'YOUR_JWT_TOKEN_HERE'; // Replace with actual JWT token
+
+    async function loadDrivers() {
+      const res = await fetch('/api/drivers?all=true', {
+        headers: {
+          Authorization: `Bearer ${yourToken}`
+        }
+      });
+      const drivers = await res.json();
+
+      drivers.forEach(driver => {
+        const isTerminated = !driver.isActive;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${driver.name}</td>
+          <td>${driver.phone}</td>
+          <td>${driver.email}</td>
+          <td>${isTerminated ? '❌ Terminated' : '✅ Active'}</td>
+          <td>${driver.terminationDate ? new Date(driver.terminationDate).toLocaleDateString() : '-'}</td>
+        `;
+        document.getElementById('driversTable').appendChild(row);
+      });
+    }
+
+    loadDrivers(); // run on page load
+  </script>
+</body>
+</html>
