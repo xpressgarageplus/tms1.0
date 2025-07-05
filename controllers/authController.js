@@ -52,16 +52,22 @@ const login = async (req, res) => {
     }
 
     const accessToken = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: '15m' }
-    );
+  {
+    id: user.id,
+    role: user.role,
+    username: user.username
+  },
+  process.env.JWT_ACCESS_SECRET,
+  { expiresIn: '15m' }
+);
 
-    const refreshToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: '7d' }
-    );
+const refreshToken = jwt.sign(
+  {
+    id: user.id
+  },
+  process.env.JWT_REFRESH_SECRET,
+  { expiresIn: '7d' }
+);
 
     await RefreshToken.create({
       token: refreshToken,

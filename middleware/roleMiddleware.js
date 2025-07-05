@@ -1,9 +1,12 @@
 // middleware/roleMiddleware.js
-module.exports = (...roles) => {
+module.exports = function allowRoles(...allowedRoles) {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Access denied: insufficient role' });
+    const user = req.user;
+
+    if (!user || !allowedRoles.includes(user.role)) {
+      return res.status(403).json({ error: 'Forbidden: Access denied' });
     }
+
     next();
   };
 };
