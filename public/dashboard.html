@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TMS Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f8f9fa;
+    }
+    header {
+      background: #007bff;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    main {
+      padding: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    button.logout {
+      background: white;
+      color: #007bff;
+      border: 1px solid white;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button.logout:hover {
+      background: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TMS Dashboard</h1>
+    <button class="logout" onclick="logout()">Logout</button>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>📦 Loads</h2>
+      <p>View and assign active loads here.</p>
+    </div>
+
+    <div class="card">
+      <h2>🚛 Drivers & Trucks</h2>
+      <p>Manage driver and vehicle assignments.</p>
+    </div>
+
+    <div class="card">
+      <h2>📄 Documents</h2>
+      <p>Upload, preview, and filter company files.</p>
+    </div>
+
+    <div class="card">
+      <h2>📊 Reports</h2>
+      <p>Driver payroll, completed loads, load status.</p>
+    </div>
+  </main>
+
+  <script>
+    // Redirect to login if token is missing
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = '/login.html';
+    }
+  </script>
+</body>
+</html>

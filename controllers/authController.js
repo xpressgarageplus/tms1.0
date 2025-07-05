@@ -4,38 +4,51 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const sendResetEmail = require('../utils/sendEmail');
 
-// Register
+// REGISTER
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role = 'user', username } = req.body;
+
+    // Check duplicate username/email
+    const existingUser = await User.findOne({
+      where: { [User.sequelize.Op.or]: [{ email }, { username }] }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email or username already in use' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
       name,
       email,
+      username,
       password: hashedPassword,
       role,
     });
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user.id, name, email, role },
+      user: { id: user.id, name, email, username, role }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Login
+// LOGIN
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const user = await User.findOne({ where: { username } });
+    if (!user || !isPasswordValid) {
+  return res.status(401).json({ error: 'Invalid email or password' });
+}
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!isMatch) return res.status(401).json({ message: 'Invalid username or password' });
 
     const accessToken = jwt.sign(
       { id: user.id, role: user.role },
@@ -52,16 +65,26 @@ exports.login = async (req, res) => {
     await RefreshToken.create({
       token: refreshToken,
       userId: user.id,
-      expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    res.json({ message: 'Login successful', accessToken, refreshToken });
+    res.json({
+      message: 'Login successful',
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        role: user.role,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Refresh Token
+// REFRESH TOKEN
 exports.refreshToken = async (req, res) => {
   const { token } = req.body;
   if (!token) return res.status(400).json({ error: 'Refresh token required' });
@@ -76,19 +99,19 @@ exports.refreshToken = async (req, res) => {
     const user = await User.findByPk(payload.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const accessToken = jwt.sign(
+    const newAccessToken = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: '15m' }
     );
 
-    res.json({ accessToken });
+    res.json({ accessToken: newAccessToken });
   } catch (err) {
     res.status(401).json({ error: 'Invalid refresh token' });
   }
 };
 
-// Request Password Reset
+// REQUEST PASSWORD RESET
 exports.requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
@@ -96,15 +119,15 @@ exports.requestPasswordReset = async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const token = crypto.randomBytes(32).toString('hex');
-    const expiry = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await PasswordResetToken.create({
       token,
       userId: user.id,
-      expiryDate: expiry
+      expiryDate: expiry,
     });
 
-    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
     await sendResetEmail(user.email, resetLink);
 
     res.json({ message: 'Password reset email sent' });
@@ -113,7 +136,7 @@ exports.requestPasswordReset = async (req, res) => {
   }
 };
 
-// Reset Password
+// RESET PASSWORD
 exports.resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
@@ -130,7 +153,7 @@ exports.resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    await storedToken.destroy(); // delete token after use
+    await storedToken.destroy(); // Delete after use
 
     res.json({ message: 'Password reset successful' });
   } catch (err) {

@@ -7,9 +7,10 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
 
 const db = {};
+
 const sequelize = new Sequelize(config.database, config.username, config.password, config);
 
-// 1. Load all models in this directory
+// Load all model files except index.js and associations.js
 fs.readdirSync(__dirname)
   .filter(file =>
     file !== basename &&
@@ -22,8 +23,10 @@ fs.readdirSync(__dirname)
     db[model.name] = model;
   });
 
-// 2. Load associations after all models initialized
-require('./associations')(db);
+// Load associations if defined
+if (fs.existsSync(path.join(__dirname, 'associations.js'))) {
+  require('./associations')(db);
+}
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
