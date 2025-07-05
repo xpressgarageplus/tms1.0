@@ -5,6 +5,38 @@ const jwt = require('jsonwebtoken');
 const sendResetEmail = require('../utils/sendEmail');
 
 // REGISTER
+exports.register = async (req, res) => {
+  try {
+    const { name, email, password, role = 'dispatcher', username } = req.body;
+
+    const existingUser = await User.findOne({
+      where: { [User.sequelize.Op.or]: [{ email }, { username }] }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email or username already in use' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      username,
+      password: hashedPassword,
+      role,
+    });
+
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: { id: user.id, name, email, username, role }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// LOGIN
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -18,53 +50,6 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
-
-    const accessToken = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: '15m' }
-    );
-
-    const refreshToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: user.id,
-      expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-
-    res.json({
-      message: 'Login successful',
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        username: user.username,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// LOGIN
-exports.login = async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    const user = await User.findOne({ where: { username } });
-    if (!user || !isPasswordValid) {
-  return res.status(401).json({ error: 'Invalid email or password' });
-}
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid username or password' });
 
     const accessToken = jwt.sign(
       { id: user.id, role: user.role },
@@ -135,7 +120,7 @@ exports.requestPasswordReset = async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const token = crypto.randomBytes(32).toString('hex');
-    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expiry = new Date(Date.now() + 60 * 60 * 1000);
 
     await PasswordResetToken.create({
       token,
@@ -169,10 +154,6 @@ exports.resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    await storedToken.destroy(); // Delete after use
+    await storedToken.destroy();
 
-    res.json({ message: 'Password reset successful' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+    res.js
