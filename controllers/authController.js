@@ -5,32 +5,48 @@ const jwt = require('jsonwebtoken');
 const sendResetEmail = require('../utils/sendEmail');
 
 // REGISTER
-exports.register = async (req, res) => {
+exports.login = async (req, res) => {
   try {
-    const { name, email, password, role = 'user', username } = req.body;
+    const { username, password } = req.body;
 
-    // Check duplicate username/email
-    const existingUser = await User.findOne({
-      where: { [User.sequelize.Op.or]: [{ email }, { username }] }
-    });
-
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email or username already in use' });
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
 
-    const user = await User.create({
-      name,
-      email,
-      username,
-      password: hashedPassword,
-      role,
+    const accessToken = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: user.id,
+      expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: { id: user.id, name, email, username, role }
+    res.json({
+      message: 'Login successful',
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        role: user.role,
+      },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
