@@ -84,6 +84,13 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+module.exports = {
+  register: exports.register,
+  login: exports.login,
+  refreshToken: exports.refreshToken,
+  requestPasswordReset: exports.requestPasswordReset,
+  resetPassword: exports.resetPassword,
+};
 
 // REFRESH TOKEN
 exports.refreshToken = async (req, res) => {
