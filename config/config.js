@@ -1,29 +1,28 @@
-
 require('dotenv').config();
 
 module.exports = {
   development: {
-    username: "postgres",
-    password: "admin123",
-    database: "tms",
-    host: "127.0.0.1",
-    port: "5432",
+    username: tms_db_l468_user,
+    password: NwXCj7Q67gTNq6Logcn7wwnwNvuoM737,
+    database: tms_db_l468,
+    host: dpg-d1jvisa4d50c738kfed0-a,
+    port: process.env.DB_PORT || 5432,
     dialect: "postgres"
   },
   test: {
-    username: "postgres",
-    password: "admin123",
-    database: "tms",
-    host: "127.0.0.1",
-    port: "5432",
+    username: tms_db_l468_user,
+    password: NwXCj7Q67gTNq6Logcn7wwnwNvuoM737,
+    database: tms_db_l468,
+    host: dpg-d1jvisa4d50c738kfed0-a,
+    port: process.env.DB_PORT || 5432,
     dialect: "postgres"
   },
   production: {
-    username: "postgres",
-    password: "admin123",
-    database: "tms",
-    host: "127.0.0.1",
-    port: "5432",
+    username: tms_db_l468_user,
+    password: NwXCj7Q67gTNq6Logcn7wwnwNvuoM737,
+    database: tms_db_l468,
+    host: dpg-d1jvisa4d50c738kfed0-a,
+    port: process.env.DB_PORT || 5432,
     dialect: "postgres"
   }
 };
