@@ -5,12 +5,12 @@ const jwt = require('jsonwebtoken');
 const sendResetEmail = require('../utils/sendEmail');
 
 // REGISTER
-exports.register = async (req, res) => {
+const register = async (req, res) => {
   try {
-    const { name, email, password, role = 'dispatcher', username } = req.body;
+    const { name, email, password, role = 'user', username } = req.body;
 
     const existingUser = await User.findOne({
-      where: { [User.sequelize.Op.or]: [{ email }, { username }] }
+      where: { [User.sequelize.Op.or]: [{ email }, { username }] },
     });
 
     if (existingUser) {
@@ -29,7 +29,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user.id, name, email, username, role }
+      user: { id: user.id, name, email, username, role },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -37,7 +37,7 @@ exports.register = async (req, res) => {
 };
 
 // LOGIN
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -84,16 +84,9 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-module.exports = {
-  register: exports.register,
-  login: exports.login,
-  refreshToken: exports.refreshToken,
-  requestPasswordReset: exports.requestPasswordReset,
-  resetPassword: exports.resetPassword,
-};
 
 // REFRESH TOKEN
-exports.refreshToken = async (req, res) => {
+const refreshToken = async (req, res) => {
   const { token } = req.body;
   if (!token) return res.status(400).json({ error: 'Refresh token required' });
 
@@ -120,7 +113,7 @@ exports.refreshToken = async (req, res) => {
 };
 
 // REQUEST PASSWORD RESET
-exports.requestPasswordReset = async (req, res) => {
+const requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ where: { email } });
@@ -143,16 +136,9 @@ exports.requestPasswordReset = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-module.exports = {
-  register: exports.register,
-  login: exports.login,
-  refreshToken: exports.refreshToken,
-  requestPasswordReset: exports.requestPasswordReset,
-  resetPassword: exports.resetPassword,
-};
 
 // RESET PASSWORD
-exports.resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
@@ -170,4 +156,17 @@ exports.resetPassword = async (req, res) => {
 
     await storedToken.destroy();
 
-    res.js
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ Final export block
+module.exports = {
+  register,
+  login,
+  refreshToken,
+  requestPasswordReset,
+  resetPassword,
+};
