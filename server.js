@@ -12,7 +12,6 @@ const PORT = process.env.PORT || 3000;
 // ----------------------------
 // Middleware
 // ----------------------------
-app.use(logger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(authMiddleware); // ✅ Global auth middleware (protects all API routes)
