@@ -1,20 +1,23 @@
 require('dotenv').config();
 const { parse } = require('pg-connection-string');
-const config = parse(process.env.DATABASE_URL);
+
+const parsed = parse(process.env.DATABASE_URL);
 
 module.exports = {
   development: {
-    username: config.user,
-    password: config.password,
-    database: config.database,
-    host: config.host,
-    port: config.port,
+    username: parsed.user,
+    password: parsed.password,
+    database: parsed.database,
+    host: parsed.host,
+    port: parsed.port,
     dialect: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    }
+  },
+  production: {
+    username: parsed.user,
+    password: parsed.password,
+    database: parsed.database,
+    host: parsed.host,
+    port: parsed.port,
+    dialect: 'postgres',
   }
 };
