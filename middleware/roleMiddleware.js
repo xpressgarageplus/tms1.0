@@ -1,12 +1,9 @@
 // middleware/roleMiddleware.js
-module.exports = function allowRoles(...allowedRoles) {
+module.exports = (...allowedRoles) => {
   return (req, res, next) => {
-    const user = req.user;
-
-    if (!user || !allowedRoles.includes(user.role)) {
-      return res.status(403).json({ error: 'Forbidden: Access denied' });
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
     }
-
     next();
   };
 };

@@ -13,33 +13,23 @@
 
   <script>
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+      e.preventDefault();
 
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email, password })
-  });
+      const res = await fetch('https://tms1-0-1.onrender.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
 
-  const data = await res.json();
+      const data = await res.json();
 
-  if (res.ok) {
-  const { accessToken, refreshToken, user } = await res.json();
-  localStorage.setItem('accessToken', accessToken);
-  localStorage.setItem('refreshToken', refreshToken);
-  localStorage.setItem('userRole', user.role); // optional
-  window.location.href = '/dashboard.html'; // ✅ redirect
-}
-
-
-    // Optionally redirect
-    window.location.href = '/dashboard.html';
-  } else {
-    alert(data.error || 'Login failed');
-  }
-});
+      if (res.ok) {
+        const { accessToken, refreshToken, user } = data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('userRole'

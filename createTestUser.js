@@ -1,23 +1,20 @@
 const bcrypt = require('bcrypt');
-const { User } = require('./models'); // adjust if in subfolder
-const sequelize = require('./config/database'); // adjust path as needed
+const { User } = require('./models');
 
-(async () => {
+async function createUser() {
   try {
-    await sequelize.authenticate();
     const hashedPassword = await bcrypt.hash('admin123', 10);
-
     const user = await User.create({
-      name: 'Admin',
-      username: 'admin',
+      name: "Admin2",
+      username: "admin2",
+      email: "admin2@example.com",
       password: hashedPassword,
-      role: 'admin'
+      role: "admin"
     });
-
-    console.log('✅ User created:', user.username);
-    process.exit();
+    console.log("✅ User created:", user.username);
   } catch (err) {
-    console.error('❌ Error creating user:', err);
-    process.exit(1);
+    console.error("❌ Error creating user:", err);
   }
-})();
+}
+
+createUser();

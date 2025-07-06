@@ -16,5 +16,6 @@ router.use('/loads', loadRoutes);             // /api/loads
 router.use('/external-loads', datRoutes);     // /api/external-loads
 router.use('/maps', mapsRoutes);              // /api/maps
 router.use('/documents', documentRoutes);     // /api/documents
+router.use('/protected', require('./protected'));
 
 module.exports = router;

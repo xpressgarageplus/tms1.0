@@ -1,0 +1,27 @@
+<!-- driver-dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><title>Driver Dashboard</title></head>
+<body>
+  <h1>Welcome, Driver</h1>
+  <button onclick="logout()">Logout</button>
+
+  <h2>Your Loads</h2>
+  <div id="driverLoads"></div>
+
+  <script>
+    const token = localStorage.getItem('accessToken');
+    fetch('/api/loads/driver', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('driverLoads').innerHTML = data.map(load => `<p>${load.description} - ${load.status}</p>`).join('');
+    });
+    function logout() {
+      localStorage.clear();
+      window.location.href = '/login.html';
+    }
+  </script>
+</body>
+</html>

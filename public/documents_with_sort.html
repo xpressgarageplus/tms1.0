@@ -1,190 +1,42 @@
+<!-- documents.html -->
 <!DOCTYPE html>
-<html>
-<head>
-  <title>Documents</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
+<html lang="en">
+<head><meta charset="UTF-8" /><title>Documents</title></head>
 <body>
-  <h2>Uploaded Documents</h2>
-
-  <!-- 🔍 Filters -->
-  <label for="filterType">Filter by Type:</label>
-  <select id="filterType" onchange="loadDocuments()">
-    <option value="">All</option>
-    <option value="driver">Driver</option>
-    <option value="load">Load</option>
-    <option value="truck">Truck</option>
-  </select>
-
-  <!-- 🔍 Search -->
-  <input type="text" id="searchInput" placeholder="Search by filename or reference ID" />
-  <button onclick="loadDocuments()">Search</button>
-
-  <!-- 🔃 Sort Controls -->
-  <label for="sortField">Sort by:</label>
-  <select id="sortField" onchange="loadDocuments()">
-    <option value="createdAt">Date</option>
-    <option value="filename">Filename</option>
-    <option value="associatedWith">Type</option>
-  </select>
-  <select id="sortOrder" onchange="loadDocuments()">
-    <option value="DESC">Descending</option>
-    <option value="ASC">Ascending</option>
-  </select>
-
-  <!-- ◀️ Pagination Controls -->
-  <div class="controls">
-    <button onclick="changePage(-1)">Previous</button>
-    <span id="pageInfo">Page 1</span>
-    <button onclick="changePage(1)">Next</button>
-  </div>
-
-  <!-- 📤 Upload Form -->
-  <h3>Upload Document</h3>
-  <form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" name="file" required />
-    <input type="text" name="uploadedBy" placeholder="Uploaded By" required />
-    <select name="associatedWith" required>
-      <option value="driver">Driver</option>
-      <option value="load">Load</option>
-      <option value="truck">Truck</option>
-    </select>
-    <input type="text" name="referenceId" placeholder="Reference ID" required />
-    <select name="category">
-      <option value="">Select Category</option>
-      <option value="invoices">Invoices</option>
-      <option value="permits">Permits</option>
-      <option value="insurance">Insurance</option>
-    </select>
-    <input type="text" name="folder" placeholder="Folder name (optional)" />
-    <input type="text" name="tags" placeholder="Tags (comma-separated)" />
+  <h2>Document Management</h2>
+  <form id="uploadForm">
+    <input type="file" name="file" required /><br/>
+    <input type="text" name="referenceId" placeholder="Reference ID" /><br/>
+    <input type="text" name="category" placeholder="Category" /><br/>
+    <input type="text" name="folder" placeholder="Folder" /><br/>
+    <input type="text" name="tags" placeholder="Tags (comma-separated)" /><br/>
     <button type="submit">Upload</button>
   </form>
 
-  <!-- 📄 Document Table -->
-  <table id="docsTable" border="1">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Filename</th>
-        <th>Type</th>
-        <th>Uploaded By</th>
-        <th>Reference ID</th>
-        <th>Uploaded At</th>
-        <th>Category</th>
-        <th>Folder</th>
-        <th>Tags</th>
-        <th>Actions / Preview</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <h3>Documents</h3>
+  <ul id="docList"></ul>
 
   <script>
-  let currentPage = 1;
-  let totalPages = 1;
-  const limit = 10;
-
-  function formatSize(bytes) {
-    const kb = bytes / 1024;
-    if (kb < 1024) return `${kb.toFixed(1)} KB`;
-    const mb = kb / 1024;
-    return `${mb.toFixed(1)} MB`;
-  }
-
-  async function loadDocuments() {
-    const type = document.getElementById('filterType').value;
-    const search = document.getElementById('searchInput').value;
-    const sortField = document.getElementById('sortField')?.value || 'createdAt';
-    const sortOrder = document.getElementById('sortOrder')?.value || 'DESC';
     const token = localStorage.getItem('accessToken');
-
-    let url = `/api/documents?page=${currentPage}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}`;
-    if (type) url += `&type=${type}`;
-    if (search) url += `&search=${encodeURIComponent(search)}`;
-
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const res = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) alert('Uploaded');
+      else alert(data.error);
     });
 
-    const data = await res.json();
-    totalPages = data.totalPages;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-
-    const table = document.querySelector('#docsTable tbody');
-    table.innerHTML = '';
-
-    const userRole = sessionStorage.getItem('userRole') || 'guest';
-
-    data.documents.forEach(doc => {
-      const uploadDate = new Date(doc.createdAt).toLocaleString();
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${doc.id}</td>
-        <td>${doc.filename}</td>
-        <td>${doc.associatedWith}</td>
-        <td>${doc.uploadedBy}</td>
-        <td>${doc.referenceId}</td>
-        <td>${uploadDate}</td>
-        <td>
-          ${userRole === 'admin' ? `<a href="/api/documents/download/${doc.filename}" target="_blank">Download</a>` : ''}
-          ${doc.mimetype.startsWith('image/') ? `<br><img src="/uploads/${doc.filename}" width="100"/>` :
-            doc.mimetype === 'application/pdf' ? `<br><embed src="/uploads/${doc.filename}" width="100" height="100" type="application/pdf"/>` : ''}
-          <br>${formatSize(doc.size)} - ${doc.mimetype}
-          <br>${userRole === 'admin' ? `<button onclick="deleteDoc(${doc.id})">Delete</button>` : ''}
-        </td>
-      `;
-      table.appendChild(row);
-    });
-  }
-
-  function changePage(offset) {
-    const newPage = currentPage + offset;
-    if (newPage < 1 || newPage > totalPages) return;
-    currentPage = newPage;
-    loadDocuments();
-  }
-
-  async function deleteDoc(id) {
-    const token = localStorage.getItem('accessToken');
-    if (!confirm('Are you sure you want to delete this document?')) return;
-
-    await fetch(`/api/documents/${id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    loadDocuments();
-  }
-
-  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const token = localStorage.getItem('accessToken');
-
-    const res = await fetch('/api/documents/upload', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    const result = await res.json();
-    if (res.ok) {
-      alert('Uploaded successfully');
-      e.target.reset();
-      loadDocuments();
-    } else {
-      alert(result.error || 'Upload failed');
-    }
-  });
-
-  loadDocuments();
-</script>
+    fetch('/api/documents', { headers: { Authorization: `Bearer ${token}` }})
+      .then(res => res.json())
+      .then(docs => {
+        const list = document.getElementById('docList');
+        list.innerHTML = docs.map(doc => `<li>${doc.filename} (${doc.category || 'uncategorized'})</li>`).join('');
+      });
+  </script>
 </body>
 </html>

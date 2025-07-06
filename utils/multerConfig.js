@@ -1,17 +1,17 @@
 const multer = require('multer');
 const path = require('path');
 
+// Set up storage with safe filenames
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Save to uploads/
-  },
+  destination: 'uploads/',
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    const timestamp = Date.now();
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, `${timestamp}-${safeName}`);
   }
 });
 
+// Multer upload instance
 const upload = multer({ storage });
 
 module.exports = upload;

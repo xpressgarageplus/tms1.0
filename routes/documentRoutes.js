@@ -2,10 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Document } = require('../models');
 const { Op } = require('sequelize');
-const multer = require('multer');
-
-// Setup multer for file uploads
-const upload = multer({ dest: 'uploads/' });
+const upload = require('../utils/multerConfig'); // ← safe filename config
 
 // GET /api/documents — list documents with pagination, search, filters
 router.get('/', async (req, res) => {
@@ -23,12 +20,8 @@ router.get('/', async (req, res) => {
 
     const where = {};
 
-    // Filter by associatedWith type
-    if (type) {
-      where.associatedWith = type;
-    }
+    if (type) where.associatedWith = type;
 
-    // Case-insensitive search (filename or referenceId)
     if (search) {
       where[Op.or] = [
         { filename: { [Op.iLike]: `%${search}%` } },
@@ -36,7 +29,6 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    // Validate sort field to prevent injection
     const allowedFields = ['createdAt', 'filename', 'associatedWith'];
     const orderBy = allowedFields.includes(sortField) ? sortField : 'createdAt';
     const direction = ['ASC', 'DESC'].includes(sortOrder.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
@@ -59,6 +51,8 @@ router.get('/', async (req, res) => {
 // POST /api/documents/upload — upload new document
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
     const {
       uploadedBy,
       associatedWith,
@@ -70,6 +64,15 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
     const { filename, originalname, mimetype, size } = req.file;
 
+    let parsedTags = tags;
+    if (typeof tags === 'string') {
+      try {
+        parsedTags = JSON.parse(tags);
+      } catch {
+        parsedTags = tags.split(',').map(t => t.trim());
+      }
+    }
+
     await Document.create({
       filename,
       originalname,
@@ -78,7 +81,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       referenceId,
       category,
       folder,
-      tags,
+      tags: parsedTags,
       mimetype,
       size
     });

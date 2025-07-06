@@ -3,13 +3,15 @@ const express = require('express');
 const path = require('path');
 const sequelize = require('./config/database');
 const { errorHandler } = require('./middleware/errorHandler');
+const logger = require('./middleware/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ----------------------------
-// Middleware (Parse JSON)
+// Middleware
 // ----------------------------
+app.use(logger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -18,7 +20,6 @@ app.use(express.urlencoded({ extended: true }));
 // ----------------------------
 app.use(express.static(path.join(__dirname, 'frontend')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ----------------------------
 // Load Models
@@ -45,24 +46,19 @@ try {
 // ----------------------------
 // Routes
 // ----------------------------
-
-// Health check
 app.get('/api/health', (req, res) => {
   res.send('✅ TMS backend is running!');
 });
 
-// Protected API example
 app.use('/api/protected', require('./routes/protected'));
-
-// Checklist UI and state saving
 app.use('/admin/checklists', require('./routes/checklistEmbedRoutes'));
 app.use('/api/checklists', require('./routes/checklistProgressRoutes'));
-
-// Other APIs
 app.use('/api/maps', require('./routes/mapsRoutes'));
-app.use('/api', require('./routes')); // Main API routes last
+app.use('/api', require('./routes')); // Main combined routes
 
-// Fallback to React frontend
+// ----------------------------
+// Fallback to frontend
+// ----------------------------
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
@@ -73,7 +69,7 @@ app.get('*', (req, res) => {
 app.use(errorHandler);
 
 // ----------------------------
-// Start Server with DB Sync
+// Start Server + DB Sync
 // ----------------------------
 sequelize.sync({ alter: true })
   .then(() => {

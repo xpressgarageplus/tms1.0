@@ -1,6 +1,10 @@
 // models/User.js
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -8,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: true, // optional if you're switching to username login
+      allowNull: true,
       unique: true
     },
     password: {

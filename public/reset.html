@@ -1,0 +1,30 @@
+<!-- reset.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><title>Reset Password</title></head>
+<body>
+  <h2>Reset Your Password</h2>
+  <form id="resetPasswordForm">
+    <input type="password" id="newPassword" placeholder="New Password" required />
+    <button type="submit">Reset</button>
+  </form>
+
+  <script>
+    const token = new URLSearchParams(window.location.search).get('token');
+    document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById('newPassword').value;
+
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword })
+      });
+
+      const data = await res.json();
+      if (res.ok) alert('Password reset successful');
+      else alert(data.error);
+    });
+  </script>
+</body>
+</html>
