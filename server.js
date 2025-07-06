@@ -58,6 +58,7 @@ app.use('/admin/checklists', require('./routes/checklistEmbedRoutes'));
 app.use('/api/checklists', require('./routes/checklistProgressRoutes'));
 app.use('/api/maps', require('./routes/mapsRoutes'));
 app.use('/api', require('./routes')); // Main combined routes
+app.use(require('./middleware/auth'));
 
 // ----------------------------
 // 404 Fallback (API)
