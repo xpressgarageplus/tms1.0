@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const sequelize = require('./config/database');
 const { errorHandler } = require('./middleware/errorHandler');
-const { logger } = require('./middleware/logger');
+const logger = require('./middleware/logger');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(logger);
 app.use(express.urlencoded({ extended: true }));
-app.use(authMiddleware); // ✅ Global auth middleware (protects all API routes)
+app.use(authMiddleware);
 
 // ----------------------------
 // Static Files
