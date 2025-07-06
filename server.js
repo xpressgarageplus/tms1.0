@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(logger);
 app.use(express.urlencoded({ extended: true }));
-app.use(authMiddleware);
+
 
 // ----------------------------
 // Static Files
