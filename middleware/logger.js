@@ -1,7 +1,5 @@
 // middleware/logger.js
-module.exports = (req, res, next) => {
-  const { method, originalUrl } = req;
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${method} ${originalUrl}`);
+module.exports = function logger(req, res, next) {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   next();
 };
