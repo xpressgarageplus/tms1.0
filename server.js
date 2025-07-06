@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 3000;
 // ----------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(logger);
 app.use(authMiddleware); // ✅ Global auth middleware (protects all API routes)
 
 // ----------------------------
@@ -83,7 +84,7 @@ app.use(errorHandler);
 sequelize.sync({ alter: true })
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚚 TMS backend is live on port ${PORT}`);
+      console.log('typeof logger:', typeof logger);
     });
   })
   .catch((err) => {
