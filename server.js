@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const sequelize = require('./config/database');
 const { errorHandler } = require('./middleware/errorHandler');
-const logger = require('./middleware/logger');
+const { logger } = require('./middleware/logger');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
