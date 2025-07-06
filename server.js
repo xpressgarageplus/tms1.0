@@ -4,6 +4,7 @@ const path = require('path');
 const sequelize = require('./config/database');
 const { errorHandler } = require('./middleware/errorHandler');
 const logger = require('./middleware/logger');
+const authMiddleware = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 app.use(logger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(authMiddleware); // ✅ Global auth middleware (protects all API routes)
 
 // ----------------------------
 // Static Files
@@ -50,11 +52,19 @@ app.get('/api/health', (req, res) => {
   res.send('✅ TMS backend is running!');
 });
 
+app.use('/api-docs', require('./swagger')); // ✅ Swagger-style route docs
 app.use('/api/protected', require('./routes/protected'));
 app.use('/admin/checklists', require('./routes/checklistEmbedRoutes'));
 app.use('/api/checklists', require('./routes/checklistProgressRoutes'));
 app.use('/api/maps', require('./routes/mapsRoutes'));
 app.use('/api', require('./routes')); // Main combined routes
+
+// ----------------------------
+// 404 Fallback (API)
+// ----------------------------
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
+});
 
 // ----------------------------
 // Fallback to frontend
