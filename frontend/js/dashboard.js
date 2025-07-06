@@ -1,21 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Shared headers
-  const accessToken = localStorage.getItem('accessToken');
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${accessToken}`
-  };
-
-  // Redirect if not logged in
-  if (!accessToken) {
+  // Get token and setup headers
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
     alert('You must be logged in.');
     window.location.href = '/login.html';
     return;
   }
 
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+
+  // Display user role in header
+  const [, payloadBase64] = token.split('.');
+  const payload = JSON.parse(atob(payloadBase64));
+  document.getElementById('userRole').textContent = payload.role || 'User';
+
   let currentPage = 1;
 
-  // Load all loads
+  // Load all loads with pagination
   function loadAllLoads(page = 1) {
     currentPage = page;
     fetch(`/api/loads?page=${page}&limit=10`, { headers })
@@ -41,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.error('Load fetch error:', err));
   }
 
-  // Render pagination
+  // Render pagination buttons
   function renderPagination(totalPages) {
     const container = document.getElementById('paginationControls');
     container.innerHTML = '';
@@ -56,19 +60,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Delete Load
+  // Delete load function
   window.deleteLoad = function (id) {
     if (!confirm('Are you sure you want to delete this load?')) return;
     fetch(`/api/loads/${id}`, {
       method: 'DELETE',
       headers
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to delete');
+        return res.json();
+      })
       .then(() => loadAllLoads(currentPage))
-      .catch(err => console.error('Delete error:', err));
+      .catch(err => alert('Delete error: ' + err.message));
   };
 
-  // Create Load
+  // Create new load
   document.getElementById('createLoadForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const description = document.getElementById('newLoadDescription').value;
@@ -81,32 +88,39 @@ document.addEventListener('DOMContentLoaded', () => {
     })
       .then(res => res.json())
       .then(() => {
+        alert('✅ Load created');
         loadAllLoads(currentPage);
         e.target.reset();
       })
       .catch(err => alert('Error creating load: ' + err.message));
   });
 
-  // Assign Load
+  // Assign driver to load
   document.getElementById('assignForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const loadId = document.getElementById('assignLoadId').value;
-    const truckId = document.getElementById('assignTruckId').value;
+    const driverId = document.getElementById('assignDriverId')?.value;
+    const truckId = document.getElementById('assignTruckId')?.value;
+
+    const assignmentData = { loadId };
+    if (driverId) assignmentData.driverId = driverId;
+    if (truckId) assignmentData.truckId = truckId;
 
     fetch('/api/loads/assign', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ loadId, truckId })
+      body: JSON.stringify(assignmentData)
     })
       .then(res => res.json())
       .then(() => {
+        alert('✅ Load assigned');
         loadAllLoads(currentPage);
         e.target.reset();
       })
       .catch(err => alert('Assignment error: ' + err.message));
   });
 
-  // Logout
+  // Logout handler
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     localStorage.clear();
     window.location.href = '/login.html';

@@ -73,6 +73,17 @@ app.use('/api/*', (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
+});
+
+app.get('/drivers', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'driver-dashboard.html'));
+});
+
+app.get('/documents', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'documents.html'));
+});
 
 // ----------------------------
 // Global Error Handler
