@@ -52,7 +52,7 @@ app.get('/api/health', (req, res) => {
   res.send('✅ TMS backend is running!');
 });
 
-app.use('/api-docs', require('./swagger')); // ✅ Swagger-style route docs
+app.use('/api-docs', require('./swagger'));
 app.use('/api/protected', require('./routes/protected'));
 app.use('/admin/checklists', require('./routes/checklistEmbedRoutes'));
 app.use('/api/checklists', require('./routes/checklistProgressRoutes'));
