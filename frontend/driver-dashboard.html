@@ -43,10 +43,17 @@
       window.location.href = '/login.html';
     }
 
-    const [, payloadBase64] = token.split('.');
-    const payload = JSON.parse(atob(payloadBase64));
-    const driverId = payload.id;
+    let payload = {};
+    try {
+      const [, payloadBase64] = token.split('.');
+      payload = JSON.parse(atob(payloadBase64));
+    } catch (err) {
+      alert('Invalid token. Please log in again.');
+      localStorage.clear();
+      window.location.href = '/login.html';
+    }
 
+    const driverId = payload.id;
     document.getElementById('driverName').textContent = `User ID: ${driverId}`;
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -54,34 +61,42 @@
       window.location.href = '/login.html';
     });
 
-    // Fetch loads assigned to this driver
     async function fetchAssignedLoads() {
-      const res = await fetch('/api/loads', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      try {
+        const res = await fetch('/api/loads', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      const allLoads = await res.json();
-      const assignedLoads = allLoads.filter(load => load.driverId == driverId);
+        if (!res.ok) {
+          throw new Error('Failed to load loads');
+        }
 
-      const tbody = document.getElementById('assignedLoadsTableBody');
-      tbody.innerHTML = '';
+        const allLoads = await res.json();
+        const assignedLoads = allLoads.filter(load => load.driverId == driverId);
 
-      assignedLoads.forEach(load => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${load.id}</td>
-          <td>${load.description || 'N/A'}</td>
-          <td>${load.status}</td>
-          <td>${load.truckId || '-'}</td>
-        `;
-        tbody.appendChild(row);
-      });
+        const tbody = document.getElementById('assignedLoadsTableBody');
+        tbody.innerHTML = '';
+
+        assignedLoads.forEach(load => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${load.id}</td>
+            <td>${load.description || 'N/A'}</td>
+            <td>${load.status}</td>
+            <td>${load.truckId || '-'}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error(error);
+        alert('Unable to fetch assigned loads.');
+      }
     }
 
     fetchAssignedLoads();
   </script>
 
-  <!-- Optional external JS -->
+  <!-- Optional: move logic to external JS -->
   <!-- <script src="/js/driver-dashboard.js"></script> -->
 </body>
 </html>
